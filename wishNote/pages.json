@@ -1,0 +1,83 @@
+{
+	"easycom":{
+		"^u-(.*)":"@/uview-ui/components/u-$1/u-$1.vue"
+	},
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "笔记"
+			}
+		}
+	    ,{
+            "path" : "pages/detail/detail",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "笔记详情",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/edit/edit",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "编辑笔记",
+                "enablePullDownRefresh": false,
+				"disableScroll":true
+            }
+            
+        }
+        ,{
+            "path" : "pages/notePhotos/notePhotos",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "笔记照片",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/comment/comment",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "笔记评论",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/personal/personal",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "我的",
+                "enablePullDownRefresh": false,
+				"navigationStyle":"custom"
+            }
+            
+        }
+    ],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#FFFFFF",
+		"navigationBarBackgroundColor":"#FFB6C1",
+		"navigationBarTextStyle":"white"
+	},
+	"tabBar": {
+		"custom": true,
+		"selectedColor": "#79D5AD",
+		"color": "#999999",
+		"backgroundColor": "#ffffff",
+		"borderStyle": "white",
+		"height":"0px",
+		"list": [{
+			"pagePath": "pages/index/index",
+			"text": " "
+		}, {
+			"pagePath": "pages/personal/personal",
+			"text": " "
+		}]
+	}
+}
