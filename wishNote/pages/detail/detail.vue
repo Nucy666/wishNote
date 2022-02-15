@@ -43,6 +43,20 @@
 				show:false
 			}
 		},
+		onLoad(option) {
+			var that = this
+			console.log(option.id)
+			uni.request({
+				url:this.baseUrl + '/note/note_detail',
+				method:"GET",
+				data:{
+					id:option.id
+				},
+				success(res) {
+					console.log(res.data)
+				}
+			})
+		},
 		methods: {
 			toEdit(id){
 				console.log(id)

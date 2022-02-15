@@ -9,9 +9,9 @@ App.mpType = 'app'
 const app = new Vue({
     ...App
 })
+Vue.prototype.baseUrl = "https://3b66cd11.cpolar.cn"
 app.$mount()
 // #endif
-
 // #ifdef VUE3
 import { createSSRApp } from 'vue'
 export function createApp() {

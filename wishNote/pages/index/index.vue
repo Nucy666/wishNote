@@ -4,16 +4,16 @@
 			<block v-for="item in noteList" :key="item.id">
 				<view class="time-title">
 					<view style="width: 100rpx;display: flex; align-items: center;justify-content: space-between;">
-						<text style="font-size: 40rpx;font-weight: 600;">{{item.day}}</text><text
-							style="font-size: 24rpx;">{{item.week}}</text>
+						<text style="font-size: 40rpx;font-weight: 600;">{{getDay(item.timestamp)}}</text><text
+							style="font-size: 24rpx;">{{getWeek(item.timestamp)}}</text>
 					</view>
-					<view style="font-size: 26rpx;color:grey">{{item.month}}</view>
+					<view style="font-size: 26rpx;color:grey">{{getYearMonth(item.timestamp)}}</view>
 				</view>
 				<u-time-line-item>
 					<template v-slot:content>
 						<view class="note-item" @click="gotoDetail(item.id)">
-							<view class="u-order-desc">{{item.title}}</view>
-							<view class="u-order-time">{{item.time}}</view>
+							<view class="u-order-desc">{{item.name}}</view>
+							<view class="u-order-time">{{getHourMinute(item.timestamp)}}</view>
 						</view>
 					</template>
 				</u-time-line-item>
@@ -41,43 +41,31 @@
 				addColor: '#FFB6C1',
 				personColor: '#c5c5c5',
 				title: 'Hello',
-				noteList: [{
-						id: 'asd446546',
-						title: '日照香炉生紫烟，遥看瀑布挂前川，飞流直下三千尺。',
-						day: '18',
-						month: '2022.01',
-						week: '周二',
-						time: '10:30'
-					},
-					{
-						id: 'asd44654',
-						title: '日照香炉生紫烟，遥看瀑布挂前川，飞流直下三千尺。',
-						day: '18',
-						month: '2022.01',
-						week: '周二',
-						time: '10:30'
-					},
-					{
-						id: 'asd46546',
-						title: '日照香炉生紫烟，遥看瀑布挂前川，飞流直下三千尺。',
-						day: '18',
-						month: '2022.01',
-						week: '周二',
-						time: '10:30'
-					}
-				]
+				noteList: []
 			}
 
 		},
 
 		onLoad() {
-
+			var that = this
+			uni.request({
+				url:this.baseUrl+'/note/note_by_page',
+				method:"POST",
+				success(res) {
+					console.log(res.data)
+					that.noteList = res.data.data
+				},
+				data:{
+					pageNo:1,
+					pageSize:5
+				}
+			})
 		},
 		methods: {
 			gotoDetail(id) {
 				console.log(id)
 				uni.navigateTo({
-					url: '/pages/detail/detail'
+					url: '/pages/detail/detail?id='+id
 				})
 			},
 			notes() {
@@ -93,6 +81,39 @@
 				uni.navigateTo({
 					url:'/pages/edit/edit'
 				})
+			},
+			getYearMonth(time){
+				var date = new Date(time);
+				if(date.getMonth()+1<10)
+					return date.getFullYear()+'.0'+(date.getMonth()+1)
+				else
+					return date.getFullYear()+'.'+(date.getMonth()+1)
+			},
+			getDay(time){
+				var date = new Date(time);
+				return date.getDate().toString()
+			},
+			getHourMinute(time){
+				var date = new Date(time);
+				var hour = date.getHours()
+				var minutes = date.getMinutes()
+				if(hour<10)
+					hour = '0'+ hour
+				if(minutes<10)
+					minutes = '0'+ minutes
+				return hour+':'+minutes
+			},
+			getWeek(time) {
+				var date = new Date(time);
+			    var week;
+			    if(date.getDay() == 0) week = "周日"
+			    if(date.getDay() == 1) week = "周一"
+			    if(date.getDay() == 2) week = "周二"
+			    if(date.getDay() == 3) week = "周三"
+			    if(date.getDay() == 4) week = "周四"
+			    if(date.getDay() == 5) week = "周五"
+			    if(date.getDay() == 6) week = "周六"
+			    return week;
 			}
 		}
 	}
