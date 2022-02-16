@@ -54,18 +54,23 @@
 			uni.request({
 				url:this.baseUrl+'/note/note_by_page',
 				method:"POST",
-				success(res) {
-					console.log(res.data)
-					that.noteList = res.data.data
-					that.pageNum += 1
-				},
 				data:{
 					pageNo:that.pageNum,
 					pageSize:that.pageSize
 					
+				},
+				success(res) {
+					console.log(res.data)
+					if(res.statusCode==200){
+						that.noteList = res.data.data
+						that.pageNum += 1
+					}else{
+						that.showErr()
+					}
+				},fail() {
+					that.showErr()
 				}
 			})
-			that.noteList= that.demoData
 		},
 		onPullDownRefresh() {
 			var that = this
@@ -79,11 +84,17 @@
 					
 				},
 				success(res) {
-					console.log(res.data)
-					that.noteList = res.data.data
-					that.pageNum += 1
-					uni.stopPullDownRefresh()
-					that.status = 'loadmore'
+					if(res.statusCode==200){
+						console.log(res.data)
+						that.noteList = res.data.data
+						that.pageNum += 1
+						uni.stopPullDownRefresh()
+						that.status = 'loadmore'
+					}else{
+						that.showErr()
+					}
+				},fail() {
+					that.showErr()
 				}
 			})
 			
@@ -113,20 +124,22 @@
 					},
 					success(res) {
 						console.log(res.data)
-						if(that.noteList.length>= res.data.total){
-							that.status = 'nomore'
-							return
+						if(res.statusCode==200){
+							if(that.noteList.length>= res.data.total){
+								that.status = 'nomore'
+								return
+							}
+							that.noteList=that.noteList.concat(res.data.data);
+							that.pageNum += 1
+							uni.stopPullDownRefresh()
+							that.status = 'loadmore'
+						}else{
+							that.showErr()
 						}
-						that.noteList=that.noteList.concat(res.data.data);
-						that.pageNum += 1
-						uni.stopPullDownRefresh()
-						that.status = 'loadmore'
+					
 					},
 					fail(e) {
-						uni.showToast({
-							title:e,
-							icon:'none'
-						})
+						that.showErr()
 					}
 				})
 			},

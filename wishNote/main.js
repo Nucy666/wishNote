@@ -10,6 +10,12 @@ const app = new Vue({
     ...App
 })
 Vue.prototype.baseUrl = "https://a5ceacc.cpolar.cn"
+Vue.prototype.showErr = function(){
+	uni.showToast({
+		title:'请求失败',
+		icon:'none'
+	})
+}
 app.$mount()
 // #endif
 // #ifdef VUE3

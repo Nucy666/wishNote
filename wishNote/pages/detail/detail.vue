@@ -1,7 +1,7 @@
 <template>
 	<view class="main">
 		<view class="datetime">
-			{{resData.day+' '+resData.week+' '+resData.time}}
+			{{getYearMonth(createDate)+'.'+getDay(createDate)+' '+getWeek(createDate)+' '+getHourMinute(createDate)}}
 		</view>
 		
 		<view class="line"></view>
@@ -12,7 +12,7 @@
 		<view class="btns-bar">
 			<button class="small-btn" @click="toPhotos"><u-icon name="photo" :color="btnColor"></u-icon></button>
 			<button class="small-btn" @click="previousNote"><u-icon name="arrow-leftward" :color="btnColor"></u-icon></button>
-			<button class="big-btn" @click="toEdit(resData.id)"><u-icon name="edit-pen-fill" :color="btnColor" size="40rpx"></u-icon></button>
+			<button class="big-btn" @click="toEdit(noteId)"><u-icon name="edit-pen-fill" :color="btnColor" size="40rpx"></u-icon></button>
 			<button class="small-btn" @click="nextNote"><u-icon name="arrow-rightward" :color="btnColor"></u-icon></button>
 			<button class="small-btn" @click="more"><u-icon name="more-circle" :color="btnColor"></u-icon></button>
 		</view>
@@ -24,8 +24,10 @@
 	export default {
 		data() {
 			return {
+				noteId:'',
 				btnColor:'#FFB6C1',
 				updateTime:'',
+				createDate:'',
 				resData:{
 					
 					id:'14asd46',
@@ -48,6 +50,8 @@
 		},
 		onLoad(option) {
 			var that = this
+			that.noteId = option.id
+			console.log(that.noteId)
 			uni.request({
 				url:this.baseUrl + '/note/note_detail',
 				method:"GET",
@@ -58,6 +62,7 @@
 					console.log(res.data)
 					that.resData.noteContent = res.data.context
 					that.updateTime = res.data.updateTime
+					that.createDate = res.data.timestamp
 				}
 			})
 		},
@@ -101,22 +106,94 @@
 				}
 			},
 			previousNote(){
-				this.resData = {
-					id:'14asd46',
-					day:'2022.01.18',
-					week:'周二',
-					time:'14:46',
-					noteContent:"前一个"
-				}
+				uni.showLoading()
+				var that = this
+				uni.request({
+					url:that.baseUrl+'/note/note_pre_or_next',
+					method:"GET",
+					data:{
+						index:0,
+						noteId:that.noteId
+					},
+					success(res) {
+						uni.hideLoading()
+						console.log(res)
+						if(res.statusCode==200){
+							console.log(res)
+							that.noteId = res.data.noteId
+							that.resData.noteContent = res.data.context
+							that.updateTime = res.data.updateTime
+							that.createDate = res.data.timestamp
+						}else{
+							that.showErr()
+						}
+					},
+					fail(e) {
+						that.showErr()
+					}
+					
+				})
 			},
 			nextNote(){
-				this.resData = {
-					id:'14asd46',
-					day:'2022.01.18',
-					week:'周二',
-					time:'14:46',
-					noteContent:"后一个"
-				}
+				var that = this
+				uni.showLoading()
+				uni.request({
+					url:that.baseUrl+'/note/note_pre_or_next',
+					method:"GET",
+					data:{
+						index:1,
+						noteId:that.noteId
+					},
+					success(res) {
+						uni.hideLoading()
+						console.log(res)
+						if(res.statusCode==200){
+							that.noteId = res.data.noteId
+							that.resData.noteContent = res.data.context
+							that.updateTime = res.data.updateTime
+							that.createDate = res.data.timestamp
+						}else{
+							that.showErr()
+						}
+						
+					},
+					fail() {
+						that.showErr()
+					}
+				})
+			},
+			getYearMonth(time){
+				var date = new Date(time);
+				if(date.getMonth()+1<10)
+					return date.getFullYear()+'.0'+(date.getMonth()+1)
+				else
+					return date.getFullYear()+'.'+(date.getMonth()+1)
+			},
+			getDay(time){
+				var date = new Date(time);
+				return date.getDate().toString()
+			},
+			getHourMinute(time){
+				var date = new Date(time);
+				var hour = date.getHours()
+				var minutes = date.getMinutes()
+				if(hour<10)
+					hour = '0'+ hour
+				if(minutes<10)
+					minutes = '0'+ minutes
+				return hour+':'+minutes
+			},
+			getWeek(time) {
+				var date = new Date(time);
+			    var week;
+			    if(date.getDay() == 0) week = "周日"
+			    if(date.getDay() == 1) week = "周一"
+			    if(date.getDay() == 2) week = "周二"
+			    if(date.getDay() == 3) week = "周三"
+			    if(date.getDay() == 4) week = "周四"
+			    if(date.getDay() == 5) week = "周五"
+			    if(date.getDay() == 6) week = "周六"
+			    return week;
 			}
 		}
 	}
