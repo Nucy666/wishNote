@@ -19,6 +19,7 @@
 				</u-time-line-item>
 			</block>
 		</u-time-line>
+		<u-loadmore :status="status" style="left: -100rpx; margin-bottom: 200rpx;" @loadmore="loadmore"/>
 		<view class="btns-bar">
 			<button class="small-btn" @click="notes()">
 				<u-icon name="bookmark" :color="noteColor"></u-icon>
@@ -37,15 +38,17 @@
 	export default {
 		data() {
 			return {
+				status:'loadmore',
 				noteColor: '#FFB6C1',
 				addColor: '#FFB6C1',
 				personColor: '#c5c5c5',
 				title: 'Hello',
-				noteList: []
+				noteList: [],
+				pageNum:1,
+				pageSize:1,
 			}
 
 		},
-
 		onLoad() {
 			var that = this
 			uni.request({
@@ -54,12 +57,39 @@
 				success(res) {
 					console.log(res.data)
 					that.noteList = res.data.data
+					that.pageNum += 1
 				},
 				data:{
-					pageNo:1,
-					pageSize:5
+					pageNo:that.pageNum,
+					pageSize:that.pageSize
+					
 				}
 			})
+			that.noteList= that.demoData
+		},
+		onPullDownRefresh() {
+			var that = this
+			that.pageNum = 1
+			uni.request({
+				url:that.baseUrl+'/note/note_by_page',
+				method:"POST",
+				data:{
+					pageNo:that.pageNum,
+					pageSize:that.pageSize
+					
+				},
+				success(res) {
+					console.log(res.data)
+					that.noteList = res.data.data
+					that.pageNum += 1
+					uni.stopPullDownRefresh()
+					that.status = 'loadmore'
+				}
+			})
+			
+		},
+		onReachBottom() {
+			this.loadmore()
 		},
 		methods: {
 			gotoDetail(id) {
@@ -70,6 +100,35 @@
 			},
 			notes() {
 				
+			},
+			loadmore(){
+				this.status = 'loading'
+				var that = this
+				uni.request({
+					url:that.baseUrl+'/note/note_by_page',
+					method:"POST",
+					data:{
+						pageNo:that.pageNum,
+						pageSize:that.pageSize
+					},
+					success(res) {
+						console.log(res.data)
+						if(that.noteList.length>= res.data.total){
+							that.status = 'nomore'
+							return
+						}
+						that.noteList=that.noteList.concat(res.data.data);
+						that.pageNum += 1
+						uni.stopPullDownRefresh()
+						that.status = 'loadmore'
+					},
+					fail(e) {
+						uni.showToast({
+							title:e,
+							icon:'none'
+						})
+					}
+				})
 			},
 			person() {
 				
@@ -131,7 +190,7 @@
 	u-time-line {
 		width: 70%;
 		// margin-left: 25%;
-
+		// margin-bottom:200rpx;
 	}
 
 	.time-title {

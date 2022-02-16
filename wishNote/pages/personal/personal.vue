@@ -3,10 +3,10 @@
 		<view class="wallpaper">
 			<image class="wallpaper" src="/static/images/wallpaper.png" mode="widthFix"></image>
 		</view>
-		<view class="header">
-			<image src="/static/logo.png" class="headerImage" mode=""></image>
+		<view class="header" @click="login()">
+			<image :src="avatar" class="headerImage" mode=""></image>
 		</view>
-		<view style="font-size: 34rpx; font-weight: 600;">小杨</view>
+		<view style="font-size: 34rpx; font-weight: 600;">{{name}}</view>
 		<view class="btns-bar">
 			<button class="small-btn" @click="notes()">
 				<u-icon name="bookmark" :color="noteColor"></u-icon>
@@ -26,25 +26,60 @@
 		data() {
 			return {
 				addColor: '#FFB6C1',
-				personColor:'#FFB6C1',
-				noteColor:'#c5c5c5'
+				personColor: '#FFB6C1',
+				noteColor: '#c5c5c5',
+				avatar:'/static/logo.png',
+				loginFlag:false,
+				name:'未登录',
+				info:''
 			}
 		},
 		methods: {
 			notes() {
 				uni.switchTab({
-					url:'/pages/index/index'
+					url: '/pages/index/index'
 				})
 			},
 			person() {
-				
-				
+
+
 			},
-			addNote(){
+			addNote() {
 				uni.navigateTo({
-					url:'/pages/edit/edit'
+					url: '/pages/edit/edit'
 				})
+			},
+			login() {
+				if(this.loginFlag){
+					return
+				}
+				var that = this
+				uni.getUserProfile({
+					desc: '展示头像和昵称',
+					success: function(infoRes) {
+						
+						uni.login({
+							provider: 'weixin',
+							  success: function (loginRes) {
+								that.avatar = infoRes.userInfo.avatarUrl
+								that.name = infoRes.userInfo.nickName
+								console.log(loginRes);
+								that.loginFlag = true
+							  }
+						})
+					},
+					fail(e) {
+						uni.showToast({
+							title:'用户取消登录',
+							icon:"none"
+						})
+					}
+				})
+				
+				
+			
 			}
+		
 		}
 	}
 </script>
@@ -56,10 +91,12 @@
 		justify-content: center;
 		align-items: center;
 	}
-	.wallpaper{
+
+	.wallpaper {
 		width: 100%;
 	}
-	.header{
+
+	.header {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -69,13 +106,15 @@
 		margin-top: -80rpx;
 		margin-bottom: 20rpx;
 		background-color: #FFFFFF;
-		box-shadow: 0px 0px 10rpx 10rpx rgba(210,210,210,0.2);
+		box-shadow: 0px 0px 10rpx 10rpx rgba(210, 210, 210, 0.2);
 	}
-	.headerImage{
+
+	.headerImage {
 		height: 150rpx;
 		width: 150rpx;
 		border-radius: 75rpx;
 	}
+
 	.btns-bar {
 		left: 12%;
 		position: fixed;
@@ -113,7 +152,7 @@
 		border-radius: 48rpx;
 		box-shadow: 0px 0px 20rpx 5rpx #ffe4e6;
 		border-color: #FFFFFF;
-		padding:5rpx;
+		padding: 5rpx;
 		line-height: 96rpx;
 	}
 
