@@ -12,7 +12,7 @@
 				<u-time-line-item>
 					<template v-slot:content>
 						<view class="note-item" @click="gotoDetail(item.id)">
-							<view class="u-order-desc">{{item.name}}</view>
+							<view class="u-order-desc">{{item.contextBrief}}</view>
 							<view class="u-order-time">{{getHourMinute(item.timestamp)}}</view>
 						</view>
 					</template>
@@ -45,11 +45,15 @@
 				title: 'Hello',
 				noteList: [],
 				pageNum:1,
-				pageSize:1,
+				pageSize:5,
+				updateFlag:false
 			}
 
 		},
 		onLoad() {
+			uni.$on('updateIndex',function(data){
+							that.updateFlag = true
+						})
 			var that = this
 			uni.request({
 				url:this.baseUrl+'/note/note_by_page',
@@ -61,7 +65,7 @@
 				},
 				success(res) {
 					console.log(res.data)
-					if(res.statusCode==200){
+					if(res.statusCode==200&& res.data.data){
 						that.noteList = res.data.data
 						that.pageNum += 1
 					}else{
@@ -72,32 +76,14 @@
 				}
 			})
 		},
+		onShow() {
+			if(this.updateFlag){
+				this.getData()
+				this.updateFlag = false
+			}
+		},
 		onPullDownRefresh() {
-			var that = this
-			that.pageNum = 1
-			uni.request({
-				url:that.baseUrl+'/note/note_by_page',
-				method:"POST",
-				data:{
-					pageNo:that.pageNum,
-					pageSize:that.pageSize
-					
-				},
-				success(res) {
-					if(res.statusCode==200){
-						console.log(res.data)
-						that.noteList = res.data.data
-						that.pageNum += 1
-						uni.stopPullDownRefresh()
-						that.status = 'loadmore'
-					}else{
-						that.showErr()
-					}
-				},fail() {
-					that.showErr()
-				}
-			})
-			
+			this.getData()
 		},
 		onReachBottom() {
 			this.loadmore()
@@ -107,6 +93,34 @@
 				console.log(id)
 				uni.navigateTo({
 					url: '/pages/detail/detail?id='+id
+				})
+			},
+			getData(){
+				var that = this
+				that.pageNum = 1
+				uni.request({
+					url:that.baseUrl+'/note/note_by_page',
+					method:"POST",
+					data:{
+						pageNo:that.pageNum,
+						pageSize:that.pageSize
+						
+					},
+					success(res) {
+						if(res.statusCode==200 && res.data.data){
+							console.log(res.data)
+							that.noteList = res.data.data
+							that.pageNum += 1
+							uni.stopPullDownRefresh()
+							that.status = 'loadmore'
+						}else{
+							that.showErr()
+							uni.stopPullDownRefresh()
+						}
+					},fail() {
+						that.showErr()
+						uni.stopPullDownRefresh()
+					}
 				})
 			},
 			notes() {
@@ -124,7 +138,7 @@
 					},
 					success(res) {
 						console.log(res.data)
-						if(res.statusCode==200){
+						if(res.statusCode==200&& res.data.data){
 							if(that.noteList.length>= res.data.total){
 								that.status = 'nomore'
 								return
@@ -135,11 +149,13 @@
 							that.status = 'loadmore'
 						}else{
 							that.showErr()
+							that.status = 'loadmore'
 						}
 					
 					},
 					fail(e) {
 						that.showErr()
+						that.status = 'loadmore'
 					}
 				})
 			},

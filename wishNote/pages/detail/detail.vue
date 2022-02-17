@@ -1,12 +1,12 @@
 <template>
 	<view class="main">
-		<view class="datetime">
+		<view class="datetime" v-if="createDate">
 			{{getYearMonth(createDate)+'.'+getDay(createDate)+' '+getWeek(createDate)+' '+getHourMinute(createDate)}}
 		</view>
 		
 		<view class="line"></view>
 		<view class="note-content">
-			{{resData.noteContent}}
+			{{noteContent}}
 		</view>
 		<view v-if="updateTime" class="update">上次更新：{{updateTime}}</view>
 		<view class="btns-bar">
@@ -28,14 +28,8 @@
 				btnColor:'#FFB6C1',
 				updateTime:'',
 				createDate:'',
-				resData:{
-					
-					id:'14asd46',
-					day:'2022.01.18',
-					week:'周二',
-					time:'14:46',
-					noteContent:''
-				},
+				noteContent:'',
+				updateFlag:false,
 				menuList:[
 					{
 						text:'评论',
@@ -49,28 +43,51 @@
 			}
 		},
 		onLoad(option) {
-			var that = this
-			that.noteId = option.id
-			console.log(that.noteId)
-			uni.request({
-				url:this.baseUrl + '/note/note_detail',
-				method:"GET",
-				data:{
-					noteId:option.id
-				},
-				success(res) {
-					console.log(res.data)
-					that.resData.noteContent = res.data.context
-					that.updateTime = res.data.updateTime
-					that.createDate = res.data.timestamp
-				}
+			this.noteId = option.id
+		    this.getData()
+		   var that = this
+		   uni.$on('update',function(data){
+				that.updateFlag = true
 			})
 		},
+		onShow() {
+			if(this.updateFlag){
+				this.getData()
+				this.updateFlag = false
+			}
+		},
 		methods: {
+			getData(){
+				uni.showLoading()
+				var that = this
+				uni.request({
+					url:this.baseUrl + '/note/note_detail',
+					method:"GET",
+					data:{
+						noteId:that.noteId
+					},
+					success(res) {
+						console.log(res.data)
+						if(res.statusCode==200&& res.data){
+							that.noteContent = res.data.context
+							that.updateTime = res.data.updateTime
+							that.createDate = res.data.timestamp
+						}else{
+							that.showErr()
+						}
+					},
+					fail() {
+						that.showErr()
+					},
+					complete() {
+						uni.hideLoading()
+					}
+				})
+			},
 			toEdit(id){
 				console.log(id)
 				uni.navigateTo({
-					url:'/pages/edit/edit'
+					url:'/pages/edit/edit?id='+this.noteId
 				})
 			},
 			toPhotos(){
@@ -78,16 +95,47 @@
 					url:"/pages/notePhotos/notePhotos"
 				})
 			},
-			deleteNote(id){
-				
+			deleteNote(){
+				var that = this
 				uni.showModal({
 					content:"是否删除该笔记",
 					success(res){
 						if(res.confirm){
-							console.log(id)
-							uni.navigateBack({
-								
+							uni.showLoading()
+							uni.request({
+								url:that.baseUrl+'/note/delete_note',
+								method:"GET",
+								data:{
+									noteId:that.noteId
+								},
+								success(res) {
+									if(res.statusCode==200&&res.data.code==0){
+										uni.showToast({
+											title:'删除成功',
+											icon:'none'
+										})
+										uni.$emit('updateIndex')
+										setTimeout(()=>{
+											uni.navigateBack({
+												
+											})
+										},500)
+										
+									}else{
+										uni.showToast({
+											title:'删除失败',
+											icon:'none'
+										})
+									}
+								},
+								fail() {
+									uni.showToast({
+										title:'删除失败',
+										icon:'none'
+									})
+								}
 							})
+							
 						}
 						
 					}
@@ -98,7 +146,7 @@
 			},
 			moreSelect(index){
 				if(this.menuList[index].text=='删除'){
-					this.deleteNote(this.resData.id)
+					this.deleteNote()
 				}else if(this.menuList[index].text=='评论'){
 					uni.navigateTo({
 						url:'/pages/comment/comment'
@@ -106,52 +154,34 @@
 				}
 			},
 			previousNote(){
-				uni.showLoading()
-				var that = this
-				uni.request({
-					url:that.baseUrl+'/note/note_pre_or_next',
-					method:"GET",
-					data:{
-						index:0,
-						noteId:that.noteId
-					},
-					success(res) {
-						uni.hideLoading()
-						console.log(res)
-						if(res.statusCode==200){
-							console.log(res)
-							that.noteId = res.data.noteId
-							that.resData.noteContent = res.data.context
-							that.updateTime = res.data.updateTime
-							that.createDate = res.data.timestamp
-						}else{
-							that.showErr()
-						}
-					},
-					fail(e) {
-						that.showErr()
-					}
-					
-				})
+				this.preOrNextNote(0)
 			},
 			nextNote(){
+				this.preOrNextNote(1)
+			},
+			preOrNextNote(flag){
 				var that = this
 				uni.showLoading()
 				uni.request({
 					url:that.baseUrl+'/note/note_pre_or_next',
 					method:"GET",
 					data:{
-						index:1,
+						index:flag,
 						noteId:that.noteId
 					},
 					success(res) {
 						uni.hideLoading()
 						console.log(res)
-						if(res.statusCode==200){
+						if(res.statusCode==200&& res.data){
 							that.noteId = res.data.noteId
-							that.resData.noteContent = res.data.context
+							that.noteContent = res.data.context
 							that.updateTime = res.data.updateTime
 							that.createDate = res.data.timestamp
+						}else if(res.data===''){
+							uni.showToast({
+								title:'无上下篇笔记',
+								icon:'none'
+							})
 						}else{
 							that.showErr()
 						}
