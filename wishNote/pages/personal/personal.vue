@@ -57,14 +57,44 @@
 				uni.getUserProfile({
 					desc: '展示头像和昵称',
 					success: function(infoRes) {
-						
+						console.log(infoRes);
+						uni.showLoading()
 						uni.login({
 							provider: 'weixin',
 							  success: function (loginRes) {
-								that.avatar = infoRes.userInfo.avatarUrl
-								that.name = infoRes.userInfo.nickName
-								console.log(loginRes);
-								that.loginFlag = true
+								  uni.request({
+								  	url:that.baseUrl+ "/note/user/login",
+									method:"POST",
+									data:{
+										avatarUrl:infoRes.userInfo.avatarUrl,
+										nickName:infoRes.userInfo.nickName,
+										js_code:loginRes.code
+									},
+									success(res) {
+										console.log(res)
+										if(res.statusCode==200&&res.data.code==0){
+											uni.showToast({
+												title:"登陆成功",
+												icon:"none"
+											})
+											that.avatar = infoRes.userInfo.avatarUrl
+											that.name = infoRes.userInfo.nickName
+											console.log(loginRes);
+											that.loginFlag = true
+											uni.setStorageSync('session',res.data.session)
+											uni.setStorageSync('userId',res.data.userId)
+										}else{
+											uni.showToast({
+												title:"登录失败",
+												icon:"none"
+											})
+										}
+									},
+									fail() {
+										that.showErr()
+									}
+								  })
+								
 							  }
 						})
 					},

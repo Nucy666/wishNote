@@ -92,7 +92,7 @@
 			},
 			toPhotos(){
 				uni.navigateTo({
-					url:"/pages/notePhotos/notePhotos"
+					url:"/pages/notePhotos/notePhotos?id="+this.noteId
 				})
 			},
 			deleteNote(){

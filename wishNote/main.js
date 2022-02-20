@@ -9,14 +9,14 @@ App.mpType = 'app'
 const app = new Vue({
     ...App
 })
-Vue.prototype.baseUrl = "https://32fe4f07.cpolar.cn"
+Vue.prototype.baseUrl = "https://55a88800.cpolar.cn"
 Vue.prototype.showErr = function(){
 	uni.showToast({
 		title:'请求失败',
 		icon:'none'
 	})
 }
-Vue.prototype.isMaster = ''
+Vue.prototype.isMaster = '',
 app.$mount()
 // #endif
 // #ifdef VUE3
