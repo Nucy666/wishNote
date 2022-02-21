@@ -1,5 +1,6 @@
 <template>
 	<view class="main">
+		<u-empty v-if="flowList.length==0" text="暂无图片" mode="favor" marginTop="200"></u-empty>
 		<view class="waterfall">
 			<view class="half-view">
 				<view @click="previewImage(item.pictureId)" @longpress="showMenu(item.pictureId)" class="item"
@@ -11,7 +12,7 @@
 			<view class="half-view">
 				<view @click="previewImage(item.pictureId)" @longpress="showMenu(item.pictureId)" class="item"
 					v-for="(item, index) in rightList" :key="item.pictureId">
-					<image :src="item.pictureUrl" mode="widthFix"></image>
+					<image :src="item.pictureUrl" mode="widthFix" ></image>
 					<view class="info">{{item.info}}</view>
 				</view>
 			</view>
@@ -154,6 +155,9 @@
 								data:{
 									pictureId:that.flowList[that.selectedIndex].pictureId
 								},
+								header:{
+									"Access-Token":uni.getStorageSync('session')
+								},
 								success(res) {
 									if(res.data.code==0){
 										that.removePhotoUrl(id)
@@ -190,6 +194,9 @@
 								name:'file',
 								formData:{
 									noteId:that.noteId
+								},
+								header:{
+									"Access-Token":uni.getStorageSync('session')
 								},
 								dataType:'data',
 								success: (res) => {

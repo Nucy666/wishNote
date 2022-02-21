@@ -66,6 +66,7 @@
 				this.noteTime = e.year+'-'+e.month+'-'+e.day+' '+e.hour+':'+e.minute+':'+e.second
 			},
 			saveNote(){
+				
 				var that = this
 				uni.showLoading({
 					
@@ -77,6 +78,9 @@
 						noteTime:that.noteTime,
 						id:that.noteId,
 						context:that.noteContent
+					},
+					header:{
+						"Access-Token":uni.getStorageSync('session')
 					},
 					success(res) {
 						console.log(res.data)

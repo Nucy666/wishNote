@@ -9,7 +9,7 @@ App.mpType = 'app'
 const app = new Vue({
     ...App
 })
-Vue.prototype.baseUrl = "https://55a88800.cpolar.cn"
+Vue.prototype.baseUrl = "https://157cd2c7.cpolar.cn"
 Vue.prototype.showErr = function(){
 	uni.showToast({
 		title:'请求失败',

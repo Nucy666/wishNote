@@ -3,10 +3,18 @@
 		<view class="wallpaper">
 			<image class="wallpaper" src="/static/images/wallpaper.png" mode="widthFix"></image>
 		</view>
+		
 		<view class="header" @click="login()">
 			<image :src="avatar" class="headerImage" mode=""></image>
 		</view>
 		<view style="font-size: 34rpx; font-weight: 600;">{{name}}</view>
+		<view class="functions">
+			<view class="func-item" v-for="item,index in functions" :key='index'>
+				<u-cell-item icon="setting-fill" :title="item" :title-style="titleStyle"></u-cell-item>
+				
+			</view>
+		</view>
+		<button class="out-btn" @click="login()">{{loginText}}</button>
 		<view class="btns-bar">
 			<button class="small-btn" @click="notes()">
 				<u-icon name="bookmark" :color="noteColor"></u-icon>
@@ -31,7 +39,34 @@
 				avatar:'/static/logo.png',
 				loginFlag:false,
 				name:'未登录',
-				info:''
+				info:'',
+				functions:['账号安全','系统消息','意见反馈','关于笔记'],
+				titleStyle:{
+					fontSize:"32rpx",
+					color:"#000000",
+					'margin-left':"20rpx"
+				},
+				loginText:'点击登录'
+			}
+		},
+		onLoad() {
+			if(uni.getStorageSync('session')){
+				this.loginFlag = true
+			}else{
+				this.loginFlag = false
+			}
+		},
+		watch:{
+			loginFlag(value){
+				if(value){
+					this.loginText = '退出登录'
+					this.name = uni.getStorageSync('name')
+					this.avatar = uni.getStorageSync('avatar')
+				}else{
+					this.loginText = '点击登录'
+					this.name = '未登录'
+					this.avatar = '/static/logo.png'
+				}
 			}
 		},
 		methods: {
@@ -40,8 +75,16 @@
 					url: '/pages/index/index'
 				})
 			},
-			person() {
-
+			outLogin() {
+				var that = this
+				uni.showModal({
+					content:'确认退出登录吗',
+					success() {
+						that.loginFlag = false
+						uni.removeStorageSync('session')
+					}
+				})
+				
 
 			},
 			addNote() {
@@ -51,6 +94,7 @@
 			},
 			login() {
 				if(this.loginFlag){
+					this.outLogin()
 					return
 				}
 				var that = this
@@ -79,10 +123,13 @@
 											})
 											that.avatar = infoRes.userInfo.avatarUrl
 											that.name = infoRes.userInfo.nickName
+											uni.setStorageSync('avatar',infoRes.userInfo.avatarUrl)
+											uni.setStorageSync('name',infoRes.userInfo.nickName)
 											console.log(loginRes);
 											that.loginFlag = true
-											uni.setStorageSync('session',res.data.session)
+											uni.setStorageSync('session',res.data.session_key)
 											uni.setStorageSync('userId',res.data.userId)
+											
 										}else{
 											uni.showToast({
 												title:"登录失败",
@@ -118,14 +165,30 @@
 	.content {
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
+		justify-content: start;
 		align-items: center;
+		height: 105vh;
+		background-color: #f6f5f9;
 	}
-
+	.functions{
+		margin-top: 100rpx;
+		width: 90%;
+		background-color: #ffffff;
+		border-radius: 20rpx;
+		font-size: 32rpx;
+	}
 	.wallpaper {
 		width: 100%;
 	}
-
+	.out-btn{
+		background-color: #ffffff;
+		margin-top: 50rpx;
+		width: 90%;
+		height: 100rpx;
+		border-radius: 20rpx;
+		font-size: 32rpx;
+		line-height: 100rpx;
+	}
 	.header {
 		display: flex;
 		align-items: center;
