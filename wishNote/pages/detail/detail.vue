@@ -149,7 +149,7 @@
 					this.deleteNote()
 				}else if(this.menuList[index].text=='评论'){
 					uni.navigateTo({
-						url:'/pages/comment/comment'
+						url:'/pages/comment/comment?id='+this.noteId
 					})
 				}
 			},
