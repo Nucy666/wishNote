@@ -12,11 +12,12 @@
 		<view class="btns-bar">
 			<button class="small-btn" @click="toPhotos"><u-icon name="photo" :color="btnColor"></u-icon></button>
 			<button class="small-btn" @click="previousNote"><u-icon name="arrow-leftward" :color="btnColor"></u-icon></button>
-			<button class="big-btn" @click="toEdit(noteId)"><u-icon name="edit-pen-fill" :color="btnColor" size="40rpx"></u-icon></button>
+			<button v-if="isMaster!==1" class="big-btn" @click="toEdit(noteId)"><u-icon name="edit-pen-fill" :color="btnColor" size="40rpx"></u-icon></button>
+			<button v-if="isMaster!==0" class="big-btn" @click="like(noteId)"><u-icon :name="isLiked?'heart-fill':'heart'" :color="btnColor" size="40rpx"></u-icon></button>
 			<button class="small-btn" @click="nextNote"><u-icon name="arrow-rightward" :color="btnColor"></u-icon></button>
 			<button class="small-btn" @click="more"><u-icon name="more-circle" :color="btnColor"></u-icon></button>
 		</view>
-		<u-action-sheet :list="menuList" v-model="show" @click="moreSelect"></u-action-sheet>
+		<u-action-sheet :list="isMaster==1? menuList:menuList1" v-model="show" @click="moreSelect"></u-action-sheet>
 	</view>
 </template>
 
@@ -30,6 +31,8 @@
 				createDate:'',
 				noteContent:'',
 				updateFlag:false,
+				isMaster:false,
+				isLiked:false,
 				menuList:[
 					{
 						text:'评论',
@@ -39,10 +42,16 @@
 						color:"#FF0000"
 					}
 				],
+				menuList1:[
+					{
+						text:'评论',
+					}
+				],
 				show:false
 			}
 		},
 		onLoad(option) {
+			this.isMaster = uni.getStorageSync('isMaster')
 			this.noteId = option.id
 		    this.getData()
 		   var that = this
@@ -94,6 +103,9 @@
 				uni.navigateTo({
 					url:"/pages/notePhotos/notePhotos?id="+this.noteId
 				})
+			},
+			like(noteId){
+				this.isLiked = !this.isLiked
 			},
 			deleteNote(){
 				var that = this

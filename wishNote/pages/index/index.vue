@@ -20,39 +20,38 @@
 			</block>
 		</u-time-line>
 		<u-loadmore :status="status" style="left: -100rpx; margin-bottom: 200rpx;" @loadmore="loadmore"/>
-		<view class="btns-bar">
-			<button class="small-btn" @click="notes()">
-				<u-icon name="bookmark" :color="noteColor"></u-icon>
-			</button>
-			<button class="big-btn" @click="addNote()">
-				<u-icon name="plus" :color="addColor" size="40rpx"></u-icon>
-			</button>
-			<button class="small-btn" @click="person()">
-				<u-icon name="account" :color="personColor"></u-icon>
-			</button>
-		</view>
+		<tab-bar :isShowAdd="loginFlag&&(isMaster==1)" :tabIndex='1'></tab-bar>
 	</view>
 </template>
 
 <script>
+	import tabBar from '../../components/tabbar/tabbar.vue'
 	export default {
+		components:{tabBar},
 		data() {
 			return {
 				status:'loadmore',
-				noteColor: '#FFB6C1',
-				addColor: '#FFB6C1',
-				personColor: '#c5c5c5',
 				title: 'Hello',
 				noteList: [],
 				pageNum:1,
 				pageSize:5,
-				updateFlag:false
+				updateFlag:false,
+				isMaster:0,
+				loginFlag:false
 			}
 
 		},
+		onShow() {
+			console.log(1111)
+		},
 		onLoad() {
+			this.updateState()
+			var that = this
 			uni.$on('updateIndex',function(data){
 							that.updateFlag = true
+						})
+			uni.$on('updateState',function(data){
+							that.updateState()
 						})
 			var that = this
 			uni.request({
@@ -117,14 +116,12 @@
 							that.showErr()
 							uni.stopPullDownRefresh()
 						}
-					},fail() {
+					},fail(e) {
+						console.log(e)
 						that.showErr()
 						uni.stopPullDownRefresh()
 					}
 				})
-			},
-			notes() {
-				
 			},
 			loadmore(){
 				this.status = 'loading'
@@ -159,16 +156,9 @@
 					}
 				})
 			},
-			person() {
-				
-				uni.switchTab({
-					url:'/pages/personal/personal'
-				})
-			},
-			addNote(){
-				uni.navigateTo({
-					url:'/pages/edit/edit'
-				})
+			updateState(){
+				this.isMaster = uni.getStorageSync('isMaster')
+				this.loginFlag = !!uni.getStorageSync('session')
 			},
 			getYearMonth(time){
 				var date = new Date(time);
@@ -276,50 +266,5 @@
 		font-size: 26rpx;
 		position: absolute;
 		bottom: 20rpx;
-	}
-
-	.btns-bar {
-		left: 12%;
-		position: fixed;
-		bottom: 50rpx;
-		width: 76%;
-		height: 140rpx;
-		box-shadow: 0px 0px 20rpx 10rpx #f4f4f4;
-		border-radius: 70rpx;
-		background-color: #FFFFFF;
-		z-index: 10;
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		justify-content: space-around;
-	}
-
-	.small-btn {
-		background-color: #FFFFFF;
-		width: 74rpx;
-		height: 74rpx;
-		border-radius: 37rpx;
-		box-shadow: 0px 0px 20rpx 5rpx #f4f4f4;
-		padding: 0;
-		line-height: 74rpx;
-	}
-
-	.big-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background-color: #ffffff;
-		width: 96rpx;
-		height: 96rpx;
-		line-height: 96rpx;
-		border-radius: 48rpx;
-		box-shadow: 0px 0px 20rpx 5rpx #ffe4e6;
-		border-color: #FFFFFF;
-		padding:5rpx;
-		line-height: 96rpx;
-	}
-
-	button::after {
-		border: none;
 	}
 </style>

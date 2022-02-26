@@ -1,14 +1,16 @@
 <template>
 	<view class="main">
-		<view class="comment-item" v-for="(item,index) in resData" @longpress="showMenu(item)" :key="item.id">
-			<image :src="item.avatar" mode=""></image>
-			<view class="name-content-time">
-				<view class="name">{{item.nickName}}</view>
-				<view class="comment-content">
-					{{item.context}}
-				</view>
-				<view class="comment-time">
-					{{item.createTime}}
+		<view class="main" style="margin-bottom:128rpx ;">
+			<view class="comment-item" v-for="(item,index) in resData" @longpress="showMenu(item)" :key="item.id">
+				<image :src="item.avatar" mode=""></image>
+				<view class="name-content-time">
+					<view class="name">{{item.nickName}}</view>
+					<view class="comment-content">
+						{{item.context}}
+					</view>
+					<view class="comment-time">
+						{{item.createTime}}
+					</view>
 				</view>
 			</view>
 		</view>
@@ -95,6 +97,7 @@
 									avatar: uni.getStorageSync('avatar'),
 									nickName:  uni.getStorageSync('name'),
 									context: that.commentInput,
+									createTime:res.data.createTime
 								})
 								uni.hideLoading()
 								that.commentInput = ''
