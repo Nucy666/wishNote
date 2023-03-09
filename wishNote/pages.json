@@ -6,7 +6,8 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "笔记"
+				"navigationBarTitleText": "笔记",
+				"enablePullDownRefresh": true
 			}
 		}
 	    ,{
@@ -56,6 +57,7 @@
             }
             
         }
+        
     ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

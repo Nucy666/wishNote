@@ -1,18 +1,19 @@
 <template>
 	<view class="main">
+		<u-empty v-if="flowList.length==0" text="暂无图片" mode="favor" marginTop="200"></u-empty>
 		<view class="waterfall">
 			<view class="half-view">
-				<view @click="previewImage(item.id)" @longpress="showMenu(item.id)" class="item"
-					v-for="(item, index) in leftList" :key="item.id">
-					<image :src="item.url" mode="widthFix"></image>
-					<view class="intro">{{item.intro}}</view>
+				<view @click="previewImage(item.pictureId)" @longpress="showMenu(item.pictureId)" class="item"
+					v-for="(item, index) in leftList" :key="item.pictureId">
+					<image :src="item.pictureUrl" mode="widthFix"></image>
+					<view class="info">{{item.info}}</view>
 				</view>
 			</view>
 			<view class="half-view">
-				<view @click="previewImage(item.id)" @longpress="showMenu(item.id)" class="item"
-					v-for="(item, index) in rightList" :key="item.id">
-					<image :src="item.url" mode="widthFix"></image>
-					<view class="intro">{{item.intro}}</view>
+				<view @click="previewImage(item.pictureId)" @longpress="showMenu(item.pictureId)" class="item"
+					v-for="(item, index) in rightList" :key="item.pictureId">
+					<image :src="item.pictureUrl" mode="widthFix" ></image>
+					<view class="info">{{item.info}}</view>
 				</view>
 			</view>
 		</view>
@@ -21,7 +22,7 @@
 			<u-icon name="plus" color="#FFB6C1"></u-icon>
 		</button>
 		<u-modal v-model="showModel" title="照片说明" @close="close" @confirm="confirm" :show-cancel-button="true">
-			<input class="model-input" type="text" v-model="selectedIntro" placeholder="请输入说明"/>
+			<input class="model-input" type="text" v-model="selectedInfo" placeholder="请输入说明"/>
 		</u-modal>
 	</view>
 </template>
@@ -30,26 +31,7 @@
 	export default {
 		data() {
 			return {
-				flowList: [{
-						id: '4sadsad',
-						url: '/static/images/image1.jpg',
-						intro: '第一次看电影'
-					},
-					{
-						id: '31sadas',
-						url: '/static/images/image2.jpg',
-						intro: '第二次看电影'
-					},
-					{
-						id: '43qsadasd',
-						url: '/static/images/image3.jpg',
-						intro: '第三次看电影'
-					},
-					{
-						id: '87asdgas',
-						url: '/static/images/image4.jpg',
-						intro: '第四次看电影'
-					}
+				flowList: [
 				],
 				leftList: [],
 				rightList: [],
@@ -65,13 +47,17 @@
 					}
 				],
 				selectedId: '',
-				selectedIntro: '',
-				selectedIndex: ''
+				selectedInfo: '',
+				selectedIndex: '',
+				noteId:''
 			}
 		},
-		onLoad() {
+		onLoad(option) {
+			if(option.id){
+				this.noteId = option.id
+			}
 			this.getImages()
-			this.initLeftRight()
+			
 		},
 		methods: {
 			initLeftRight() {
@@ -84,11 +70,12 @@
 						this.rightList.push(item)
 					}
 				})
+				console.log(this.leftList)
 			},
 			getImageIndex(id) {
 				var reIdx = 0
 				this.flowList.forEach((item, index) => {
-					if (item.id == id) {
+					if (item.pictureId == id) {
 						reIdx = index
 					}
 				})
@@ -96,10 +83,31 @@
 			},
 			getImages() {
 				var images = []
-				this.flowList.forEach((item, index) => {
-					images.push(item.url)
+				uni.showLoading()
+				var that = this
+				uni.request({
+					url:that.baseUrl+ "/note/picture/pic_urls",
+					data:{
+						noteId:that.noteId 
+					},
+					method:"GET",
+					success(res) {
+						if(res.statusCode==200&&res.data.data){
+							that.flowList = res.data.data
+							that.flowList.forEach((item, index) => {
+								images.push(item.pictureUrl)
+							})
+							that.urlArr = images
+							uni.hideLoading()
+							that.initLeftRight()
+						}else{
+							that.showErr()
+						}
+					},fail() {
+						that.showErr()
+					}
 				})
-				this.urlArr = images
+				
 			},
 			previewImage(id) {
 				console.log(id)
@@ -110,8 +118,10 @@
 				})
 			},
 			showMenu(id) {
+				console.log(id)
 				this.selectedIndex = this.getImageIndex(id)
-				this.selectedIntro = this.flowList[this.selectedIndex].intro
+				console.log(this.selectedIndex)
+				this.selectedInfo = this.flowList[this.selectedIndex].info
 				this.selectedId = id
 				this.show = !this.show
 			},
@@ -119,13 +129,13 @@
 				if (this.menuList[index].text == '删除') {
 					this.deletePhoto(this.selectedId)
 				} else if (this.menuList[index].text == '编辑说明') {
-					this.editIntro()
+					this.editinfo()
 				}
 			},
 			removePhotoUrl(id) {
 				var idx = 0
 				this.flowList.forEach((item, index) => {
-					if (item.id == id) {
+					if (item.pictureId == id) {
 						idx = index
 					}
 				})
@@ -139,11 +149,22 @@
 					content: "是否删除该照片",
 					success(res) {
 						if (res.confirm) {
-							that.removePhotoUrl(id)
-							uni.showToast({
-								icon: 'none',
-								title: '删除了'
+							uni.request({
+								url:that.baseUrl+ "/note/picture/delete_picture",
+								method:"GET",
+								data:{
+									pictureId:that.flowList[that.selectedIndex].pictureId
+								},
+								header:{
+									"Access-Token":uni.getStorageSync('session')
+								},
+								success(res) {
+									if(res.data.code==0){
+										that.removePhotoUrl(id)
+									}
+								}
 							})
+							
 
 						}
 
@@ -151,7 +172,7 @@
 				})
 
 			},
-			editIntro() {
+			editinfo() {
 				this.showModel = true
 			},
 
@@ -159,34 +180,96 @@
 				return Number(Math.random().toString().substr(3, length) + Date.now()).toString(36);
 			},
 			addPhoto() {
+				
 				var that = this
 				uni.chooseImage({
 					sizeType: "Original",
 					success(res) {
 						res.tempFilePaths.forEach((item) => {
-							var image = {
-								url: item,
-								id: that.getID(8),
-								intro: ''
-							}
-							that.flowList.push(image)
-							that.urlArr.push(item)
-							that.initLeftRight()
+							console.log(item)
+							uni.showLoading()
+							uni.uploadFile({
+								url:that.baseUrl+"/note/picture/save_pic",
+								filePath:item,
+								name:'file',
+								formData:{
+									noteId:that.noteId
+								},
+								header:{
+									"Access-Token":uni.getStorageSync('session')
+								},
+								dataType:'data',
+								success: (res) => {
+									res = JSON.parse(res.data);
+									if(res.code==0){
+										var image = {
+											pictureUrl: item,
+											pictureId: res.extendVal,
+											info: '',
+										}
+										that.flowList.push(image)
+										that.urlArr.push(item)
+										that.initLeftRight()
+										uni.hideLoading()
+									}
+									else{
+										uni.showToast({
+											title:'上传失败',
+											icon:'none'
+										})
+									}
+								},
+								fail() {
+									uni.showToast({
+										title:'上传失败',
+										icon:'none'
+									})
+								}
+								
+							})
 						})
 
 					}
 				})
 			},
 			close() {
-				this.selectedIntro = ''
-
+				this.selectedInfo = ''
 			},
 
 			confirm() {
 				// console.log(e)
-				this.flowList[this.selectedIndex].intro = this.selectedIntro
-				this.initLeftRight()
-				this.selectedIntro = ''
+				uni.showLoading()
+				var that = this
+				uni.request({
+					url:that.baseUrl+ '/note/picture/save_pic_info',
+					data:{
+						pictureId:that.flowList[that.selectedIndex].pictureId,
+						info:that.selectedInfo
+					},
+					method:"POST",
+					success(res) {
+						
+						if(res.statusCode==200&&res.data.code==0){
+							uni.hideLoading()
+							that.flowList[that.selectedIndex].info = that.selectedInfo
+							that.selectedInfo = ''
+							uni.hideLoading()
+						}
+						else{
+							uni.showToast({
+								title:"保存失败",
+								icon:"none"
+							})
+						}
+					},
+					fail(e) {
+						uni.showToast({
+							title:"保存失败",
+							icon:"none"
+						})
+					}
+				})
+			
 
 			}
 		}
@@ -231,7 +314,7 @@
 		border-radius: 20rpx;
 	}
 
-	.intro {
+	.info {
 		margin-bottom: 20rpx;
 		align-self: flex-start;
 		margin-left: 7%;

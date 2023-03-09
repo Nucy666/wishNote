@@ -1,14 +1,16 @@
 <template>
 	<view class="main">
-		<view class="comment-item" v-for="(item,index) in resData" @longpress="showMenu(item.id)" :key="item.id">
-			<image :src="item.headIcon" mode=""></image>
-			<view class="name-content-time">
-				<view class="name">{{item.name}}</view>
-				<view class="comment-content">
-					{{item.comment}}
-				</view>
-				<view class="comment-time">
-					{{item.dateTime}}
+		<view class="main" style="margin-bottom:128rpx ;">
+			<view class="comment-item" v-for="(item,index) in resData" @longpress="showMenu(item)" :key="item.id">
+				<image :src="item.avatar" mode=""></image>
+				<view class="name-content-time">
+					<view class="name">{{item.nickName}}</view>
+					<view class="comment-content">
+						{{item.context}}
+					</view>
+					<view class="comment-time">
+						{{item.createTime}}
+					</view>
 				</view>
 			</view>
 		</view>
@@ -28,35 +30,7 @@
 	export default {
 		data() {
 			return {
-				resData: [{
-						id: 'asdasd',
-						headIcon: '/static/logo.png',
-						name: '小明',
-						comment: '羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了羡慕了',
-						dateTime: '2022.01.01 10:10'
-					},
-					{
-						id: 'asd123asd',
-						headIcon: '/static/logo.png',
-						name: '小红',
-						comment: '爱了爱了',
-						dateTime: '2022.01.01 10:10'
-					},
-					{
-						id: 'asda423sd',
-						headIcon: '/static/logo.png',
-						name: '小张',
-						comment: '真不错',
-						dateTime: '2022.01.01 10:10'
-					},
-					{
-						id: 'asda234sd',
-						headIcon: '/static/logo.png',
-						name: '小军',
-						comment: '我觉得可以啊',
-						dateTime: '2022.01.01 10:10'
-					},
-				],
+				resData: [],
 				menuList: [
 					{
 						text: '删除',
@@ -66,8 +40,33 @@
 				commentInput: "",
 				inputBottom: 0,
 				selectedId: '',
-				show:false
+				show:false,
+				noteId:'',
+				selectedUser:''
 			}
+		},
+		onLoad(option) {
+			uni.onKeyboardHeightChange(res => {
+			  this.inputBottom = res.height
+			})
+			if(option.id){
+				this.noteId = option.id
+			}
+			var that = this
+			uni.request({
+				url:that.baseUrl + '/note/query_comment_list',
+				method:'GET',
+				data:{
+					noteId:that.noteId
+				},
+				success(res) {
+					if(res.data.data){
+						that.resData = res.data.data
+					}else{
+						
+					}
+				}
+			})
 		},
 		methods: {
 			blurTextarea(){
@@ -75,14 +74,40 @@
 			},
 			addComment(){
 				if(this.commentInput){
-					this.resData.push({
-						id: this.getID(8),
-						headIcon: '/static/logo.png',
-						name: '小军',
-						comment: this.commentInput,
-						dateTime: '2022.01.01 10:10'
+					var that = this
+					uni.showLoading({
+						
 					})
-					this.commentInput = ''
+					uni.request({
+						url:that.baseUrl + '/note/comment_note',
+						method:'POST',
+						header:{
+							'Access-Token':uni.getStorageSync('session'),
+							
+						},
+						data:{
+							noteId:that.noteId,
+							userId:uni.getStorageSync('userId'),
+							context:that.commentInput
+						},
+						success(res) {
+							if(res.data.code==0){
+								that.resData.splice(0,0,{
+									id: res.data.extendVal,
+									avatar: uni.getStorageSync('avatar'),
+									nickName:  uni.getStorageSync('name'),
+									context: that.commentInput,
+									createTime:res.data.createTime
+								})
+								uni.hideLoading()
+								that.commentInput = ''
+							}else{
+								that.showErr()
+							}
+						},fail() {
+							that.showErr()
+						}
+					})
 				}else{
 					uni.showToast({
 						title:'请输入内容',
@@ -96,12 +121,12 @@
 					this.deleteComment()
 				} 
 			},
-			getID(length){
-			   return Number(Math.random().toString().substr(3,length) + Date.now()).toString(36);
-			},
-			showMenu(id) {
-				this.selectedId = id
-				this.show = !this.show
+			showMenu(item) {
+				if(item.userId == uni.getStorageSync('userId')){
+					this.selectedId = item.id
+					this.show = !this.show
+				}
+				
 			},
 			deleteComment(){
 				var that = this
@@ -109,17 +134,44 @@
 					content: "是否删除该评论",
 					success(res) {
 						if (res.confirm) {
-							let idx
-							that.resData.forEach((item,index)=>{
-								if(item.id==that.selectedId){
-									idx = index;
+							uni.showLoading({
+								
+							})
+							uni.request({
+								url:that.baseUrl+'/note/delete_comment',
+								method:'GET',
+								header:{
+									'Access-Token':uni.getStorageSync('session')
+								},
+								data:{
+									commentId:that.selectedId,
+									userId:uni.getStorageSync('userId')
+								},
+								success(res) {
+									if(res.data.code==0){
+										let idx
+										that.resData.forEach((item,index)=>{
+											if(item.id==that.selectedId){
+												idx = index;
+											}
+										})
+										that.resData.splice(idx,1)
+										uni.showToast({
+											title:"删除成功",
+											icon:'none'
+										})
+									}else{
+										uni.showToast({
+											title:"删除失败",
+											icon:'none'
+										})
+									}
+								},fail() {
+									that.showErr()
 								}
 							})
-							that.resData.splice(idx,1)
-							uni.showToast({
-								icon: 'none',
-								title: '删除了'
-							})
+							
+							
 				
 						}
 				
@@ -127,11 +179,6 @@
 				})
 				
 			}
-		},
-		onLoad() {
-			uni.onKeyboardHeightChange(res => {
-			  this.inputBottom = res.height
-			})
 		}
 	}
 </script>

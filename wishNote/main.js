@@ -9,9 +9,15 @@ App.mpType = 'app'
 const app = new Vue({
     ...App
 })
+Vue.prototype.baseUrl = "https://35cebfb4.cpolar.cn"
+Vue.prototype.showErr = function(){
+	uni.showToast({
+		title:'请求失败',
+		icon:'none'
+	})
+}
 app.$mount()
 // #endif
-
 // #ifdef VUE3
 import { createSSRApp } from 'vue'
 export function createApp() {
